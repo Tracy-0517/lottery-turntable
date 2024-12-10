@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width,height=device-height,initial-scale=1,minimum-scale=1,user-scalable=no"
+  />
+  <title>大转盘</title>
+
+  <style>
+    :root {
+      font-size: 10px;
+
+      --pointer-bg: #ca1619;
+      --pointer-border-color: #e62d2d;
+    }
+
+    .container {
+      width: 100%;
+      height: 100%;
+      text-align: center;
+    }
+
+    /* panel */
+    .panel {
+      position: relative;
+      margin:50px auto;
+      width: 300px;
+      height: 300px;
+    }
+
+    /* 转盘 */
+    .turntable {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      border: 2rem solid var(--pointer-bg);
+      border-radius: 50%;
+      overflow: hidden;
+      box-sizing: border-box;
+      transition: all 5s;
+    }
+
+    /* 扇形列表 */
+    .pie-list {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+    }
+
+    /* 扇形 */
+    .slice {
+      overflow: hidden;
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 50%;
+      height: 50%;
+      transform-origin: 0% 100%;
+      border-left: 1px solid #aaa;
+    }
+    /* 里面内容 */
+    .slice-content {
+      position: absolute;
+      /* right:9px;
+      padding:0 30% 0 20%; */
+      transform-origin: left top;
+      transform: translateX(-25%) rotate(30deg);
+      color: #d46854;
+      font-size: 20px;
+      box-sizing: border-box;
+      width: 100%;
+      height: 50%;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      /* align-items: center; */
+    }
+
+    /* 指针 */
+    .pointer {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 24%;
+      height: 24%;
+      background: var(--pointer-bg);
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      font-size: 1.8rem;
+      border: 1rem solid var(--pointer-border-color);
+    }
+
+    /* needle */
+    .pointer::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translate(-50%, -100%);
+      width: 0;
+      height: 0;
+      border-left: 1.8rem solid transparent;
+      /* 左边边框设置为透明 */
+      border-right: 1.8rem solid transparent;
+      /* 右边边框设置为透明 */
+      border-bottom: 6rem solid var(--pointer-border-color);
+      /* 下边框设置为实线颜色 */
+    }
+
+    .start-btn {
+      background: none;
+      border: none;
+      width: 100%;
+      height: 100%;
+      font-size: inherit;
+    }
+
+    .pointer-info {
+      width: 100%;
+      flex-shrink: 0;
+      text-align: center;
+      color: #fdbc00;
+    }
+  </style>
+
+  <script>
+    // 奖项信息  ,'谢谢参与','谢谢参与'
+    const prizeList = ['一等奖', '二等奖', '三等奖', '四等奖', '参与奖', '谢谢参与']
+
+    // 扇形的个数
+    const pieCount = prizeList.length;
+    // 每一个的角度
+    const perDeg = 360 / pieCount;
+
+
+    // 转盘禁启用标识：当转盘用过之后 需要复位才可再次受用
+    let startDisabled = false
+
+    window.onload = function () {
+      console.log("window load");
+      // 生成转盘的奖品区
+      generatePie();
+
+      // 点击开始抽奖
+      const startBtn = document.getElementById("start");
+      startBtn.addEventListener("click", function () {
+        console.log(startDisabled)
+        // 如果禁用
+        if (startDisabled) {
+          alert('请先复位转盘')
+        }
+        else {
+          // 禁用抽奖按钮
+          startDisabled = true;
+          startLottery();
+        }
+      });
+
+      // 复位转盘
+      const resetBtn = document.getElementById('reset')
+      resetBtn.onclick = function () {
+        resetTurnable()
+      }
+    };
+
+
+
+
+    /** 生成转盘的扇形 */
+    function generatePie() {
+      //循环增加扇形
+      for (let i = 0; i < pieCount; i++) {
+        // 创建li元素
+        let li = document.createElement("li");
+        // 内容
+        let content = document.createElement("div");
+        content.classList = 'slice-content'
+        content.textContent = prizeList[i];
+        // li插入元素
+        li.append(content);
+
+        // 定义class
+        li.classList = "slice";
+
+        // 定义每个旋转角度
+        let deg = - perDeg / 2 + perDeg * i;
+        // 变形的角度：90-变形的角度= 平行四边形的角度（即每个扇形的角度）
+        // let skewY = 90 - perDeg;
+        // 设置transform的旋转角度和变形的角度
+        li.style =
+          "transform: rotate(" + deg + "deg)";
+
+        // 边长
+        let borderWidth = 130
+        // 等腰三角形底边长：即扇形的底边
+        console.log('perDeg', perDeg)
+        let rotateWidth = Math.sin(perDeg / 2 * Math.PI / 180) * 130 * 2
+        console.log('rotateWidth', rotateWidth)
+        // right值
+        contentRight = (borderWidth - rotateWidth) / 2 + 'px'
+        console.log('contentRight', contentRight)
+        // content.style.right=contentRight
+
+        // 内容转回 translateX(-25%)
+        content.style.transform = "translate(-" + contentRight + ") rotate(" + perDeg / 2 + "deg)";
+        // 插入元素
+        document.getElementById("pieList").appendChild(li);
+      }
+    }
+
+    /** 开始抽奖*/
+    function startLottery() {
+      // 动画时间
+      const animateLong = 5
+      // 转盘
+      const turntable = document.getElementById("turntable");
+      // 设置动画时间
+      turntable.style.transition = 'all ' + animateLong + 's'
+
+      // 随机生成角度，
+      let turnDeg = getRandomInt(360, 1800);
+      console.log("turnDeg", turnDeg);
+      // 旋转
+      turntable.style.transform = "rotateZ(" + turnDeg + "deg)";
+      // 当旋转角度大于360时，减去整圈数
+      while (turnDeg > 360) {
+        turnDeg = turnDeg - 360;
+      }
+      console.log(turnDeg);
+      console.log((turnDeg + perDeg / 2) / perDeg)
+      // 获取当前选中项: 总个数 - 旋转的个数 向上取整
+      index = Math.ceil(pieCount - (turnDeg + perDeg / 2) / perDeg);
+      console.log("index", index);
+      const timer = setTimeout(function () {
+        alert(prizeList[index])
+        clearTimeout(timer)
+
+      }, animateLong * 1000)
+    }
+
+    /** 复位转盘 */
+    function resetTurnable() {
+      const turntable = document.getElementById("turntable");
+      // 去掉动画
+      turntable.style.transition = 'none'
+      // 旋转
+      turntable.style.transform = "rotateZ(0deg)";
+
+      // 禁用抽奖按钮
+      startDisabled = false;
+
+    }
+
+    /** 生成随机数*/
+    function getRandomInt(min, max) {
+      min = Math.ceil(min); // 保证min是整数
+      max = Math.floor(max); // 保证max是整数
+      return Math.floor(Math.random() * (max - min + 1)) + min; // 返回介于min和max之间的整数
+    }
+  </script>
+</head>
+
+<body>
+  <div class="container">
+    <!-- panel  -->
+    <div class="panel">
+      <div
+        id="turntable"
+        class="turntable"
+      >
+        <ul
+          id="pieList"
+          class="pie-list"
+        >
+          <!-- <li class="slice slice1">
+            <div class="slice-content">11111111</div>
+          </li>
+          -->
+        </ul>
+      </div>
+
+      <!-- pointer -->
+      <div class="pointer">
+        <button
+          id="start"
+          class="start-btn"
+        >
+          <div class="pointer-info">开始</div>
+          <div class="pointer-info">抽奖</div>
+        </button>
+      </div>
+    </div>
+
+
+    <button id="reset">复位转盘</button>
+  </div>
+</body>
+
+</html>
